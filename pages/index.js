@@ -6,7 +6,7 @@ import { Separator } from '@/components/ui/separator';
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, } from "@/components/ui/pagination"
 import { Menu, X } from 'lucide-react';
 
-import Image from 'next/image' // 追記
+import Image from 'next/image'
 import dynamic from 'next/dynamic'
 
 import sketches from "@/lib/sketches";
@@ -15,6 +15,9 @@ import sampleFuncs from '@/lib/demos/samplefunc';
 
 import { InlineMath, BlockMath } from 'react-katex';
 import 'katex/dist/katex.min.css';
+
+import { basePath } from "../next.config"
+const BASE_PATH = basePath ? basePath : ""
 
 const ReactP5Wrapper = dynamic(
 	() => import("react-p5-wrapper").then((mod) => mod.ReactP5Wrapper),
@@ -375,7 +378,7 @@ const RaymarchingPage = () => {
 					<br />
 					<br />
 				</PanelItem>
-				<PanelItem title={"§1-1"} subtitle={"感覚的理解"} image={"/assets/slide_11.gif"} height={877}>
+				<PanelItem title={"§1-1"} subtitle={"感覚的理解"} image={`${BASE_PATH}/assets/slide_11.gif`} height={877}>
 					<h1 className="text-4xl font-bold mb-2">レイマーチングの感覚的理解#1</h1>
 					<Separator className="my-4" />
 					<p>先ほどのレイマーチング(Sphere Tracing)の図を3次元に拡張した図です。</p>
@@ -399,7 +402,7 @@ const RaymarchingPage = () => {
 					<Separator className="my-4" />
 					<a style={{ color: "#299" }} href='https://reindernijhoff.net/2017/07/raymarching-distance-fields/'>図引用:https://reindernijhoff.net/2017/07/raymarching-distance-fields/</a>
 				</PanelItem>
-				<PanelItem title={"§1-2"} subtitle={"感覚的理解"} image={"/assets/pix.png"} height={877}>
+				<PanelItem title={"§1-2"} subtitle={"感覚的理解"} image={`${BASE_PATH}/assets/pix.png`} height={877}>
 					<h1 className="text-4xl font-bold mb-2">レイマーチングの感覚的理解#2</h1>
 					<Separator className="my-4" />
 					<p>先ほどの説明で、ある程度軽量に光をシミュレーションする方法が分かりました。</p>
