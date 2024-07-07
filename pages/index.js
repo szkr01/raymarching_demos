@@ -16,7 +16,7 @@ import sampleFuncs from '@/lib/demos/samplefunc';
 import { InlineMath, BlockMath } from 'react-katex';
 import 'katex/dist/katex.min.css';
 
-import { basePath } from "../next.config"
+import { basePath } from "../../next.config"
 const BASE_PATH = basePath ? basePath : ""
 
 const ReactP5Wrapper = dynamic(
