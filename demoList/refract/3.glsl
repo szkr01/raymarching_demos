@@ -8,29 +8,6 @@ const float PI=3.14159265359;
 #define MAX_DIST 10.
 #define SURF_DIST .01
 
-vec3 rotate(vec3 p,float angle,vec3 axis){
-    vec3 a=normalize(axis);
-    float s=sin(angle);
-    float c=cos(angle);
-    float r=1.-c;
-    mat3 m = mat3(
-        a.x*a.x*r+c,
-        a.y*a.x*r+a.z*s,
-        a.z*a.x*r-a.y*s,
-        a.x*a.y*r-a.z*s,
-        a.y*a.y*r+c,
-        a.z*a.y*r+a.x*s,
-        a.x*a.z*r+a.y*s,
-        a.y*a.z*r-a.x*s,
-        a.z*a.z*r+c
-    );
-    return m*p;
-}
-
-mat2 Rot(float a) {
-    float s=sin(a), c=cos(a);
-    return mat2(c, -s, s, c);
-}
 
 mat3 Rot3(float a,vec3 v){
     float s=sin(a), c=cos(a);
@@ -49,7 +26,7 @@ mat3 orthBas( vec3 z ) {
 }
 
 vec3 cyclicNoise( vec3 p ) {
-    mat3 b = orthBas( vec3( 3.0, -1.2, 5.4 ) ); // magic, does not make any sense
+    mat3 b = orthBas( vec3( 3.0, -1.2, 5.4 ) );
     float warp = 1.1;
     float amp = 0.5;
     vec3 result = vec3( 0.0 );
@@ -85,7 +62,7 @@ float easeInOutQuint(float x) {
     return x < 0.5 ? 16. * x * x * x * x * x : 1. - pow(-2. * x + 2., 5.) / 2.;
 }
 
-float sceneSDF(vec3 p){
+vec3 sceneSDF(vec3 p){
     float r = 2.;
     float d = sdSphere(p, r);
     float th = abs(p.x)*0.6;
@@ -93,16 +70,17 @@ float sceneSDF(vec3 p){
     p2.x-=sin(u_time*0.3)*1.;
     float d2 = sdBox(p2, vec3(0.5,th,th));
     d = -smoothMin(-d,d2,1.+sin(u_time*0.87)*0.9);
-    return d;
+    return vec3(d, 0.0, 0.0); // Return vec3 instead of float
 }
 
 vec3 sceneNormal(vec3 p){
     float eps=.001;
-    return normalize(vec3(
-        sceneSDF(vec3(p.x+eps,p.y,p.z))-sceneSDF(vec3(p.x-eps,p.y,p.z)),
-        sceneSDF(vec3(p.x,p.y+eps,p.z))-sceneSDF(vec3(p.x,p.y-eps,p.z)),
-        sceneSDF(vec3(p.x,p.y,p.z+eps))-sceneSDF(vec3(p.x,p.y,p.z-eps))
-    ));
+    vec3 n = vec3(
+        sceneSDF(vec3(p.x+eps,p.y,p.z)).x-sceneSDF(vec3(p.x-eps,p.y,p.z)).x,
+        sceneSDF(vec3(p.x,p.y+eps,p.z)).x-sceneSDF(vec3(p.x,p.y-eps,p.z)).x,
+        sceneSDF(vec3(p.x,p.y,p.z+eps)).x-sceneSDF(vec3(p.x,p.y,p.z-eps)).x
+    );
+    return normalize(n);
 }
 
 vec3 skyBox(vec3 rd){
@@ -111,28 +89,37 @@ vec3 skyBox(vec3 rd){
     col-=vec3(1.0, 1.0, 1.0)*pow(max(sun,0.),2.);
     col-=vec3(1.0, 1.0, 1.0)*pow(max(-sun,0.),2.);
     col = pow(col,vec3(4));
-    //col+=vec3(1.0, 0.7686, 0.0)*pow(max(dot(cyclicNoise(rd+vec3(u_time)),vec3(0.,1.,0.)),0.),2.);
     return col;
 }
 
-float rayMarch(vec3 ro,vec3 rd,float side){
-    float d=0.;
+vec3 rayMarch(vec3 ro,vec3 rd,float side){
+    float d = 0.;
+    float m = 0.;
+    float h = 0.;
     for(int i=0;i<MAX_STEPS;i++){
         vec3 p = ro + rd*d;
-        float dS=sceneSDF(p)*side;
-        d+=dS;
-        if(dS>MAX_DIST || abs(d) < SURF_DIST)break;
+        vec3 res = sceneSDF(p);
+        h = res.x * side;
+        m = res.y;
+        d += h;
+        if(h < SURF_DIST || d > MAX_DIST) break;
     }
-    return d;
-
+    return vec3(d, m, h);
 }
 
-vec3 renderScene(vec3 ro,vec3 rd){
-    float d = rayMarch(ro,rd,1.0);
 
+vec3 renderScene(vec3 ro,vec3 rd){
     vec3 col = skyBox(rd);
-    float IOR = 1.4; // index of refraction
-    float abb = 0.05;
+    float px = 1.0 / u_resolution.y; // Pixel size
+
+    vec3 res = rayMarch(ro, rd, 1.0);
+    float t = res.x;
+    float d = t;
+    float m = res.y;
+
+    float IOR = 1.5; // index of refraction
+    float abb = 0.07;
+
     if(d<MAX_DIST){
         vec3 p=ro+rd*d;
         vec3 n=sceneNormal(p);
@@ -143,7 +130,7 @@ vec3 renderScene(vec3 ro,vec3 rd){
         vec3 rdIn = refract(rd, n, 1.0 / IOR);
 
         vec3 pEnter = p - n*SURF_DIST*3.;
-        float dIn = rayMarch(pEnter, rdIn,-1.);
+        float dIn = rayMarch(pEnter, rdIn,-1.).x;
 
         vec3 pExit = pEnter + rdIn * dIn; // 3d position of exit
         vec3 nExit = -sceneNormal(pExit); 
@@ -175,12 +162,11 @@ vec3 renderScene(vec3 ro,vec3 rd){
         float fresnel = pow(1.+dot(rd, n), 5.);
         
         col = mix(reflTex, refOutside, fresnel);
-        //col = n*.5+.5;
     }else{
         col = vec3(1.);
     }
 
-    col = pow(col, vec3(0.4545));
+    col = pow(col, vec3(0.14545));
 
     return col;
 }
@@ -191,11 +177,11 @@ void main(){
     vec3 ray_origin=vec3(0.,0.,-6.);
     vec3 ray_direction=normalize(vec3(uv,1.));
     float t = u_time*.3;
-    ray_origin = rotate(ray_origin,mouse.x*PI*2.+t,vec3(0.,1.,0.));
-    ray_direction = rotate(ray_direction,mouse.x*PI*2.+t,vec3(0.,1.,0.));
+    ray_origin *= Rot3(mouse.x*PI*2.+t,vec3(0.,1.,0.));
+    ray_direction *= Rot3(mouse.x*PI*2.+t,vec3(0.,1.,0.));
 
-    ray_origin = rotate(ray_origin,mouse.y*PI*2.+t,vec3(0.,0.,1.));
-    ray_direction = rotate(ray_direction,mouse.y*PI*2.+t,vec3(0.,0.,1.));
+    ray_origin *= Rot3(mouse.y*PI*2.+t,vec3(0.,0.,1.));
+    ray_direction *= Rot3(mouse.y*PI*2.+t,vec3(0.,0.,1.));
     
     vec3 color = renderScene(ray_origin,ray_direction);
     

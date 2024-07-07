@@ -244,7 +244,7 @@ const PanelItem = ({ title, subtitle, inv = false, demo, image, sketch, children
 			/>
 		</div>
 	</>
-	let elm = ELM ? ELM :((sketch) ?<ReactP5Wrapper sketch={sketch} /> : ((image) ? img : ((demo == null) ? <NullCanvas /> : <RaymarchingDemo fragmentShader={demo.fragmentShader} />)));
+	let elm = ELM ? ELM : ((sketch) ? <ReactP5Wrapper sketch={sketch} /> : ((image) ? img : ((demo == null) ? <NullCanvas /> : <RaymarchingDemo fragmentShader={demo.fragmentShader} />)));
 	if (inv) {
 		return (<><div className="p-1">
 			<Card>
@@ -452,10 +452,10 @@ const RaymarchingPage = () => {
 					<p>右の図は、距離関数合成を表した図です。</p>
 					<p>距離が同じ場所は同じ濃さで描画されます。</p>
 					<p>2つの距離関数の最小、最大をとることで、物体の和集合、積集合をとることができます。</p>
-					<CodeDisplay language={"glsl"} code={sampleFuncs.sdf1}/>
+					<CodeDisplay language={"glsl"} code={sampleFuncs.sdf1} />
 				</PanelItem>
 
-				<PanelItem title={"§3"} subtitle={"実際に書いてみる"} ELM={<CodeDisplay language={"glsl"} code={demos["complex_cube"].fragmentShader} width='600px'height={`568px`} maxHeight='100%'/>} inv>
+				<PanelItem title={"§3"} subtitle={"実際に書いてみる"} ELM={<CodeDisplay language={"glsl"} code={demos["complex_cube"].fragmentShader} width='600px' height={`568px`} maxHeight='100%' />} inv>
 					<h1 className="text-4xl font-bold mb-2">実際に書いてみる</h1>
 					<Separator className="my-4" />
 					<p>以上の説明で、最低限の知識は揃いました。</p>
@@ -491,7 +491,7 @@ const RaymarchingPage = () => {
 					<p>これで球体の距離関数が定義できました。</p>
 				</PanelItem>
 
-				<PanelItem title={"§3-2"} subtitle={"実際に書いてみる"} ELM={<CodeDisplay language={"glsl"} code={sampleFuncs["rayMarch1"]} width='600px' height={`568px`} maxHeight='100%' overflow ="hidden"/>}>
+				<PanelItem title={"§3-2"} subtitle={"実際に書いてみる"} ELM={<CodeDisplay language={"glsl"} code={sampleFuncs["rayMarch1"]} width='600px' height={`568px`} maxHeight='100%' overflow="hidden" />}>
 					<h1 className="text-4xl font-bold mb-2">レイマーチングで光(レイ)をシミュレーション</h1>
 					<Separator className="my-4" />
 					<p>次にレイマーチングで光をシミュレーションします。</p>
@@ -585,7 +585,5 @@ const RaymarchingPage = () => {
 		</>
 	);
 };
-
-
 
 export default RaymarchingPage;

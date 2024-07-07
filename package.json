@@ -24,14 +24,17 @@
     "p5": "^1.9.4",
     "react": "^18",
     "react-dom": "^18",
+    "react-katex": "^3.0.1",
     "react-markdown": "^9.0.1",
     "react-p5": "^1.4.1",
     "react-p5-wrapper": "^4.1.2",
     "react-resizable-panels": "^2.0.19",
+    "react-syntax-highlighter": "^15.5.0",
     "tailwind-merge": "^2.3.0",
     "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
+    "@types/react-katex": "^3.0.4",
     "eslint": "^8",
     "eslint-config-next": "14.2.4",
     "postcss": "^8",
