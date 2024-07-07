@@ -16,8 +16,7 @@ import sampleFuncs from '@/lib/demos/samplefunc';
 import { InlineMath, BlockMath } from 'react-katex';
 import 'katex/dist/katex.min.css';
 
-import { basePath } from "../../next.config"
-const BASE_PATH = basePath ? basePath : ""
+const BASE_PATH = "/raymarching_demos"
 
 const ReactP5Wrapper = dynamic(
 	() => import("react-p5-wrapper").then((mod) => mod.ReactP5Wrapper),
