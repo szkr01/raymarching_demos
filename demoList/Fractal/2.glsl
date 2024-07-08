@@ -84,8 +84,32 @@ float map(vec3 rayP)
 	return d*Scale;
 }
 
+float sdf(vec3 pos3d)
+{
+    // Constants
+    float SCALE = 8. / 6.28318530718;
+    const float radius = 0.4;
+    // Choose 2 dimensions and apply the forward log-polar map
+    vec2 pos2d = pos3d.xz;
+    
+    float r = length(pos2d);
+    pos2d = vec2(log(r), atan(pos2d.y, pos2d.x));
+
+    // Scale pos2d so tiles will fit nicely in the ]-pi,pi] interval
+    pos2d *= SCALE;
+
+    // Convert pos2d to single-tile coordinates
+    pos2d = fract(pos2d-u_time+1e10) - 0.5;
+
+    // Get ball distance;
+    // Shrink Y coordinate proportionally to the other dimensions;
+    // Return distance value multiplied by the final scaling factor
+    float mul = r/SCALE;
+    return (length(vec3(pos2d, max(0.0, -pos3d.y/mul))) - radius) * mul;
+}
+
 float sceneSDF(vec3 p){
-    return map(p);
+    return sdf(p);
 }
 
 vec3 sceneNormal(vec3 p){
@@ -119,22 +143,79 @@ float rayMarch(vec3 ro,vec3 rd,float side){
     return d;
 }
 
+vec3 cc(vec3 p)
+{
+    float height = p.y*20.0;
+	vec3 top = vec3(0.1294, 0.1843, 0.2471);
+	vec3 ring = vec3(0.6, 0.04, 0.0);
+	vec3 bottom = vec3(0.3, 0.3, 0.3);
+	bottom = mix(vec3(0.0), bottom, min(1.0, -1.0/(p.y*20.0-1.0)));
+	vec3 side = mix(bottom, ring, smoothstep(-height-0.001, -height, p.y));
+	return mix(side, top, smoothstep(-0.01, 0.0, p.y));
+}
 
 vec3 renderScene(vec3 ro,vec3 rd){
-    vec3 col = vec3(0);
-    float d = rayMarch(ro, rd, 1.0);
+    float d = rayMarch(ro,rd,1.0);
 
+    vec3 col = skyBox(rd);
+    float IOR = 1.1; // index of refraction
+    float abb = 0.005;
     if(d<MAX_DIST){
-        vec3 p = ro + rd*d;
-        vec3 n = sceneNormal(p);
-        float rim = pow(max(0.,dot(n,rd)),2.);
-        col += vec3(0.0, 0.6824, 1.0)*rim;
-        col += pow(dot(-n,rd),2.0)*vec3(1.0, 1.0, 1.0)*0.1;
-        col *= pow(1.0 - 0.1*clamp(d*0.1,0.0,1.0),2.0);
+        vec3 p=ro+rd*d;
+        vec3 n=sceneNormal(p);
+
+        vec3 r = reflect(rd, n);
+        vec3 refOutside = skyBox(r);
+        
+        vec3 rdIn = refract(rd, n, 1.0 / IOR);
+
+        vec3 pEnter = p - n*SURF_DIST*3.;
+        float dIn = rayMarch(pEnter, rdIn,-1.);
+
+        vec3 pExit = pEnter + rdIn * dIn; // 3d position of exit
+        vec3 nExit = -sceneNormal(pExit); 
+
+        vec3 reflTex = vec3(0);
+        
+        vec3 rdOut = vec3(0);
+
+        // red
+        rdOut = refract(rdIn, nExit, IOR-abb);
+        if(dot(rdOut, rdOut)==0.) rdOut = reflect(rdIn, nExit);
+        reflTex.r = skyBox(rdOut).r;
+        
+        // green
+        rdOut = refract(rdIn, nExit, IOR);
+        if(dot(rdOut, rdOut)==0.) rdOut = reflect(rdIn, nExit);
+        reflTex.g = skyBox(rdOut).g;
+        
+        // blue
+        rdOut = refract(rdIn, nExit, IOR+abb);
+        if(dot(rdOut, rdOut)==0.) rdOut = reflect(rdIn, nExit);
+        reflTex.b = skyBox(rdOut).b;
+
+        float dens = .1;
+        float optDist = exp(-dIn*dens);
+        
+        reflTex = reflTex*optDist;//*vec3(1., .05,.2);
+        
+        float fresnel = pow(1.+dot(rd, n), 5.);
+        
+        col = n*.5+.5;
+        col += mix(reflTex, refOutside, fresnel)*0.1;
+
+        col = mix(col, cc(p), smoothstep(0., 1., d/MAX_DIST));
+        //col = normalize(col);
+    }else{
+        col = vec3(1.);
     }
 
-    col = pow(col,vec3(.455));
-    
+    //distance fog
+    col = mix(col, vec3(0), 1.-exp(-d*0.4));
+
+    col = 1.-col;
+
+    col = pow(col, vec3(0.3545));
 
     return col;
 }
@@ -143,15 +224,16 @@ void main(){
     vec2 uv = (gl_FragCoord.xy-.5*u_resolution.xy)/u_resolution.y;
     vec2 mouse = ((u_mouse.xy-u_resolution.xy)/u_resolution.y)*2.-1.;
     
-    vec3 ray_origin=vec3(0.,0.,-1.);
+    vec3 ray_origin=vec3(0.,0.,-2.);
     vec3 ray_direction=normalize(vec3(uv,1.));
 
     float t = u_time*.1;
 
-    //ray_origin *= Rot3(mouse.x*PI*2.+t,vec3(0.,1.,0.));
-    //ray_direction *= Rot3(mouse.x*PI*2.+t,vec3(0.,1.,0.));
-    ray_origin *= Rot3(mouse.y*PI*2.+t,vec3(0.,0.,1.));
-    ray_direction *= Rot3(mouse.y*PI*2.+t,vec3(0.,0.,1.));
+    ray_origin *= Rot3(mouse.y,vec3(1.,0.,0.));
+    ray_direction *= Rot3(mouse.y,vec3(1.,0.,0.));
+    ray_origin *= Rot3(mouse.x*PI*2.+t,vec3(0.,1.,0.));
+    ray_direction *= Rot3(mouse.x*PI*2.+t,vec3(0.,1.,0.));
+    
     
     vec3 color = renderScene(ray_origin,ray_direction);
     

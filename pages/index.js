@@ -32,66 +32,11 @@ const Header = () => (
 			<h1 className="text-2xl font-bold">RayMarchingDemo</h1>
 			<nav>
 				<ul className="flex space-x-4">
-					<li><a href="#" className="hover:text-gray-300">ホーム</a></li>
-					<li><a href="#" className="hover:text-gray-300">デモ一覧</a></li>
-					<li><a href="#" className="hover:text-gray-300">説明</a></li>
 				</ul>
 			</nav>
 		</div>
 	</header>
 );
-
-const HamburgerMenu = () => {
-	const [isOpen, setIsOpen] = useState(false);
-
-	const toggleMenu = () => {
-		setIsOpen(!isOpen);
-	};
-
-	return (
-		<>
-			{/* Hamburger Icon */}
-			<button
-				onClick={toggleMenu}
-				className="fixed top-4 right-4 z-50 p-2 rounded-md bg-gray-800 text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white"
-				aria-label="Toggle menu"
-			>
-				{isOpen ? <X size={24} /> : <Menu size={24} />}
-			</button>
-
-			{/* Sidebar Menu */}
-			<div
-				className={`fixed top-0 right-0 h-full w-64 bg-gray-800 text-white p-5 transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full'
-					} z-40`}
-			>
-				<nav className="mt-10">
-					<ul className="space-y-4">
-						<li>
-							<a href="#" className="block hover:text-gray-300">Home</a>
-						</li>
-						<li>
-							<a href="#" className="block hover:text-gray-300">About</a>
-						</li>
-						<li>
-							<a href="#" className="block hover:text-gray-300">Services</a>
-						</li>
-						<li>
-							<a href="#" className="block hover:text-gray-300">Contact</a>
-						</li>
-					</ul>
-				</nav>
-			</div>
-
-			{/* Overlay */}
-			{isOpen && (
-				<div
-					className="fixed inset-0 bg-black bg-opacity-50 z-30"
-					onClick={toggleMenu}
-				></div>
-			)}
-		</>
-	);
-};
 
 const createShader = (gl, type, source) => {
 	const shader = gl.createShader(type);
@@ -314,7 +259,7 @@ const RaymarchingPage = () => {
 			</Head>
 
 			<Header />
-			<HamburgerMenu />
+
 			<div className="container mx-auto p-4">
 				<PanelItem title={"#1"} subtitle={""} demo={demos["complex_cube"]}>
 					<h1 className="text-6xl font-bold mb-2">RayMarching</h1>
@@ -579,8 +524,72 @@ const RaymarchingPage = () => {
 					<br />
 					<h2 className="text-2xl font-bold mb-2">空間の歪み2</h2>
 					<p>地面に当たる部分は、ただの平面をゆがませて作成しています。</p>
-					<p>平面の距離関数を適応する際に、y座標にボロノイを足すことで成り立っています。</p>
+					<p>平面の距離関数を適応する際に、y座標にボロノイを足すことで表現しています。</p>
 				</PanelItem>
+
+				<PanelItem title={"§4-3"} subtitle={"様々な例"} demo={demos["flactal1"]}>
+					<h1 className="text-4xl font-bold mb-2">フラクタル</h1>
+					<Separator className="my-4" />
+					<br />
+					<br />
+					<p>この立体はメンガーのスポンジと言われます</p>
+					<br />
+					<br />
+					<h2 className="text-2xl font-bold mb-2">空間の繰り返し</h2>
+					<p>距離関数でフラクタル図形を表すのは非常に困難に思えるでしょう。</p>
+					<p>しかし、空間を繰り返すことで、このようなフラクタルの立体物が表現可能です。</p>
+					<p>繰り返しの回数増やすと、指数関数的に複雑さが増します。</p>
+				</PanelItem>
+
+				<PanelItem title={"§4-3"} subtitle={"様々な例"} demo={demos["flactal2"]}>
+					<h1 className="text-4xl font-bold mb-2">空間の折り畳み</h1>
+					<Separator className="my-4" />
+					<br />
+					<br />
+					<p>極座標系を用いて物体を複製</p>
+					<br />
+					<br />
+					<h2 className="text-2xl font-bold mb-2">空間の折り畳み</h2>
+					<p>無限にズームしているように見えます。</p>
+					
+					<MathWrap>
+						{`(\\rho, \\theta) = \\left(\\log(x^2 + y^2), \\arctan\\left(\\frac{y}{x}\\right)\\right)`}
+					</MathWrap>
+					<p>このように空間を写すことにより実現しています。</p>
+					<p>写した後の空間で距離関数を計算する事で物体が、このように整列します。</p>
+
+
+				</PanelItem>
+
+				<PanelItem title={"§5"} subtitle={"最後に"}>
+					<h1 className="text-4xl font-bold mb-2">最後に</h1>
+					<Separator className="my-4" />
+					<p>レイマーチングはかなり数学的な感覚を要求します。</p>
+					<p>距離関数を合成したり、空間を捻じ曲げたり...etc</p>
+					<p>映像を数式だけで表現するといっても過言ではないです。</p>
+					<br />
+					<p>私がレイマーチングを知ったのは最近ですが、より早く知っていればよかったと感じています。</p>
+					<p>そこで中学生くらいの時の自分に、レイマーチングを教える事をイメージして作成しました。</p>
+					<br />
+					<br />
+					<p>レイマーチングは難解な分野ですが、興味深い映像を手軽に作成できます。</p>
+					<p>興味を持ったら、レイマーチングを自分で書いてみてください。</p>
+					<br />
+					<br />
+					<br />
+					<br />
+					<br />
+					<br />
+					<br />
+					<br />
+					<br />
+					<br />
+					<br />
+					<h1 className="text-2xl font-bold mb-2">おしまい</h1>
+					
+				</PanelItem>
+
+
 
 
 			</div>
